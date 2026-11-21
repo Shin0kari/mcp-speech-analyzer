@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblySearchPaths>{HintPathFromItem};{RawFileName}</AssemblySearchPaths>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="RollingCases.cs" />
+    <Compile Include="AudioCases.cs" />
+    <Compile Include="PackageDebugIdentity.cs" />
+    <Compile Include="../TestSupport/TestRunOutput.cs" />
+    <Reference Include="SpeechAnalyzer.Core" HintPath="$(CandidateDirectory)/SpeechAnalyzer.Core.dll" />
+    <Reference Include="SpeechAnalyzer.Audio.Windows" HintPath="$(CandidateDirectory)/SpeechAnalyzer.Audio.Windows.dll" />
+  </ItemGroup>
+</Project>

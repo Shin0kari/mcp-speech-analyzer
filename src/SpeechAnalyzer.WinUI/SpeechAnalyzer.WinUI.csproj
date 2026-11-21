@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup>
+  <OutputType>WinExe</OutputType>
+  <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+  <TargetPlatformMinVersion>10.0.20348.0</TargetPlatformMinVersion>
+  <UseWinUI>true</UseWinUI>
+  <WinUISDKReferences>false</WinUISDKReferences>
+  <WindowsPackageType>None</WindowsPackageType>
+  <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  <PlatformTarget>x64</PlatformTarget>
+  <ImplicitUsings>enable</ImplicitUsings>
+  <Nullable>enable</Nullable>
+  <DefaultItemExcludes>$(DefaultItemExcludes);artifacts/**</DefaultItemExcludes>
+  <ApplicationManifest>app.manifest</ApplicationManifest>
+ </PropertyGroup>
+ <ItemGroup>
+  <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7175" />
+  <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="2.6.4" />
+  <ProjectReference Include="../SpeechAnalyzer.Core/SpeechAnalyzer.Core.csproj" />
+  <ProjectReference Include="../SpeechAnalyzer.Audio.Windows/SpeechAnalyzer.Audio.Windows.csproj" />
+  <ProjectReference Include="../../tools/SttWorker/SttWorker.csproj" ReferenceOutputAssembly="false" />
+ </ItemGroup>
+ <Target Name="CollectSttWorkerFiles">
+  <PropertyGroup>
+   <SttWorkerOutputDirectory Condition="'$(SttWorkerOutputDirectory)' == '' and '$(UseArtifactsOutput)' == 'true'">$(ArtifactsPath)/$(ArtifactsBinOutputName)/SttWorker/$(Configuration.ToLowerInvariant())</SttWorkerOutputDirectory>
+   <SttWorkerOutputDirectory Condition="'$(SttWorkerOutputDirectory)' == ''">$(MSBuildThisFileDirectory)../../tools/SttWorker/bin/$(Configuration)/net10.0-windows10.0.26100.0</SttWorkerOutputDirectory>
+  </PropertyGroup>
+  <Error Condition="!Exists('$(SttWorkerOutputDirectory)/SttWorker.exe')" Text="Не найден собранный SttWorker: $(SttWorkerOutputDirectory). Для нестандартной компоновки задайте SttWorkerOutputDirectory явно." />
+  <ItemGroup><SttWorkerFiles Include="$(SttWorkerOutputDirectory)/**/*" /></ItemGroup>
+ </Target>
+ <Target Name="CopySttWorker" AfterTargets="Build" DependsOnTargets="CollectSttWorkerFiles">
+  <Copy SourceFiles="@(SttWorkerFiles)" DestinationFiles="@(SttWorkerFiles->'$(OutDir)stt-worker/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+ </Target>
+ <Target Name="CopyLocalPublishResources" AfterTargets="Publish" DependsOnTargets="CollectSttWorkerFiles">
+  <Error Condition="!Exists('$(OutDir)$(AssemblyName).pri')" Text="Не найден индекс ресурсов собранного окна: $(OutDir)$(AssemblyName).pri" />
+  <ItemGroup><LocalXamlResources Include="$(OutDir)$(AssemblyName).pri;$(OutDir)**/*.xbf" /></ItemGroup>
+  <Copy SourceFiles="@(LocalXamlResources)" DestinationFiles="@(LocalXamlResources->'$(PublishDir)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  <Copy SourceFiles="@(SttWorkerFiles)" DestinationFiles="@(SttWorkerFiles->'$(PublishDir)stt-worker/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+ </Target>
+</Project>

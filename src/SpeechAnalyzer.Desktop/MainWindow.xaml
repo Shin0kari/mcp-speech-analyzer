@@ -1,0 +1,137 @@
+<Window x:Class="SpeechAnalyzer.Desktop.MainWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="Speech Analyzer — симуляция" Width="1180" Height="820" MinWidth="920" MinHeight="660"
+ Background="#F3F6FA" Foreground="{StaticResource Ink}" FontFamily="Segoe UI" FontSize="13" WindowStartupLocation="CenterScreen">
+ <Grid Margin="20">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Grid Margin="0,0,0,18">
+   <StackPanel>
+    <TextBlock Text="Speech Analyzer" FontSize="26" FontWeight="SemiBold"/>
+    <TextBlock Text="Два канала · расшифровка · помощь в разговоре" Foreground="{StaticResource Muted}" Margin="0,3,0,0"/>
+   </StackPanel>
+   <Border HorizontalAlignment="Right" VerticalAlignment="Center" Background="#FFF0CE" CornerRadius="6" Padding="12,8">
+    <StackPanel><TextBlock Text="СИМУЛЯЦИЯ" Foreground="#855600" FontWeight="Bold"/>
+     <TextBlock Text="Без микрофона, аудиозахвата и вызовов Codex" FontSize="11" Foreground="#855600"/></StackPanel>
+   </Border>
+  </Grid>
+  <Grid Grid.Row="1">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="285"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <Border Background="White" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="10" Padding="16">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+     <StackPanel>
+      <TextBlock Text="Управление" FontSize="18" FontWeight="SemiBold"/>
+      <TextBlock Text="Источник «Вы»" Style="{StaticResource Caption}"/>
+      <ComboBox IsEnabled="False" SelectedIndex="0"><ComboBoxItem Content="Микрофон · имитация"/></ComboBox>
+      <ProgressBar x:Name="YouLevel" Height="5" Maximum="1" Foreground="#397AE5"/>
+      <TextBlock Text="Источник «Собеседник»" Style="{StaticResource Caption}"/>
+      <ComboBox IsEnabled="False" SelectedIndex="0"><ComboBoxItem Content="Brave · имитация"/></ComboBox>
+      <ProgressBar x:Name="OtherLevel" Height="5" Maximum="1" Foreground="#25A18A"/>
+      <TextBlock Text="Индикаторы показывают условную активность" FontSize="10" Foreground="{StaticResource Muted}" Margin="0,5,0,12" TextWrapping="Wrap"/>
+      <WrapPanel><Button x:Name="StartButton" Content="Старт" Click="Start_Click" Background="#2667D8" Foreground="White"/>
+       <Button x:Name="PauseButton" Content="Пауза" Click="Pause_Click"/>
+       <Button x:Name="StopButton" Content="Стоп" Click="Stop_Click" Margin="0"/></WrapPanel>
+      <TextBlock Text="Режим анализа" Style="{StaticResource Caption}" Margin="0,18,0,3"/>
+      <ComboBox x:Name="ModeSelector" SelectedIndex="0" SelectionChanged="Mode_Changed">
+       <ComboBoxItem Content="Ручной · каждые 60 секунд"/><ComboBoxItem Content="Автоматический · каждые 5 секунд"/>
+      </ComboBox>
+      <TextBlock x:Name="CountdownText" Text="Таймер появится после старта" Foreground="{StaticResource Muted}" FontSize="12"/>
+      <Button x:Name="AnswerButton" Content="Ответить" FontWeight="SemiBold" FontSize="15" Margin="0,12,0,0" Padding="12,11" Click="Answer_Click" Background="#2667D8" Foreground="White"/>
+      <Button x:Name="RetryButton" Content="Повторить после сбоя" Margin="0,6,0,0" Click="Retry_Click" Visibility="Collapsed"/>
+      <Separator Margin="0,16,0,8"/>
+      <TextBlock Text="Настройки имитатора" FontWeight="SemiBold"/>
+      <CheckBox x:Name="DemoSpeech" Content="Демонстрационный разговор" IsChecked="True" Margin="0,10,0,8"/>
+      <TextBlock Text="Снять флажок для проверки тишины." FontSize="11" Foreground="{StaticResource Muted}"/>
+      <TextBlock Text="Задержка модели" Style="{StaticResource Caption}"/>
+      <ComboBox x:Name="DelaySelector" SelectedIndex="0"><ComboBoxItem Content="2 секунды"/><ComboBoxItem Content="8 секунд"/><ComboBoxItem Content="15 секунд"/></ComboBox>
+      <CheckBox x:Name="FailNext" Content="Ошибка следующего вызова" Margin="0,0,0,8" Checked="FailNext_Changed" Unchecked="FailNext_Changed"/>
+      <TextBlock Text="Состояние живёт в памяти до закрытия окна. Аудио и файлы разговоров не создаются." TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource Muted}" Margin="0,10,0,0"/>
+     </StackPanel>
+    </ScrollViewer>
+   </Border>
+   <Border Grid.Column="2" Background="White" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="10" Padding="14">
+    <Grid>
+     <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+     <TabControl BorderThickness="0" Background="White">
+      <TabItem Header="  Ответы  ">
+       <Grid Margin="0,12,0,0">
+        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <ScrollViewer x:Name="ChatScroll" VerticalScrollBarVisibility="Auto" ScrollChanged="Chat_ScrollChanged">
+         <StackPanel>
+          <Border Background="#F1F6FE" CornerRadius="8" Padding="16" Margin="0,0,8,14">
+           <StackPanel><TextBlock Text="Проверьте сценарии до подключения звука" FontWeight="SemiBold"/>
+            <TextBlock Text="Нажмите «Старт». Реплики появятся через 6 секунд. В ручном режиме фоновый анализ не публикует сообщения; «Ответить» покажет результат имитатора." TextWrapping="Wrap" Foreground="{StaticResource Muted}" Margin="0,7,0,0"/>
+           </StackPanel>
+          </Border>
+          <ItemsControl ItemsSource="{Binding Chat}">
+           <ItemsControl.ItemTemplate><DataTemplate>
+            <Border Background="#F7F9FC" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,8,12">
+             <StackPanel><TextBlock Text="{Binding Header}" FontSize="11" Foreground="{StaticResource Muted}" Margin="0,0,0,8"/>
+              <TextBlock Text="{Binding Text}" TextWrapping="Wrap" LineHeight="21"/>
+             </StackPanel>
+            </Border>
+           </DataTemplate></ItemsControl.ItemTemplate>
+          </ItemsControl>
+         </StackPanel>
+        </ScrollViewer>
+        <Button x:Name="LatestButton" Grid.Row="1" Content="К последнему сообщению ↓" Click="Latest_Click" HorizontalAlignment="Right" Visibility="Collapsed" Margin="0,6,0,0"/>
+       </Grid>
+      </TabItem>
+      <TabItem Header="  Расшифровка  ">
+       <Grid Margin="0,12,0,0">
+        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <ListBox ItemsSource="{Binding Transcript}" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch">
+         <ListBox.ItemTemplate><DataTemplate>
+          <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="8,10">
+           <StackPanel><TextBlock Text="{Binding Header}" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource Muted}"/>
+            <TextBlock Text="{Binding Text}" TextWrapping="Wrap" Margin="0,5,0,0"/>
+           </StackPanel>
+          </Border>
+         </DataTemplate></ListBox.ItemTemplate>
+        </ListBox>
+        <StackPanel Grid.Row="1" Margin="0,10,0,0">
+         <TextBlock Text="Добавить тестовую реплику · финализация через 1,5 с" FontSize="11" Foreground="{StaticResource Muted}"/>
+         <TextBox x:Name="SpeechInput" Margin="0,6,0,0" ToolTip="Текст имитируемой речи"/>
+         <Grid Margin="0,6,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="100"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+          <ComboBox x:Name="ChannelSelector" SelectedIndex="1" Margin="0,0,6,0"><ComboBoxItem Content="Вы"/><ComboBoxItem Content="Собеседник"/></ComboBox>
+          <ComboBox x:Name="MeaningSelector" Grid.Column="1" SelectedIndex="0" Margin="0,0,6,0"><ComboBoxItem Content="Факт"/><ComboBoxItem Content="Новый вопрос"/></ComboBox>
+          <Button x:Name="InjectButton" Grid.Column="2" Content="Добавить" Click="Inject_Click" Margin="0"/>
+         </Grid>
+         <TextBlock Text="Смысл тестовой реплики задаётся явно: имитатор не распознаёт вопросы по тексту." FontSize="10" Foreground="{StaticResource Muted}" Margin="0,5,0,0" TextWrapping="Wrap"/>
+        </StackPanel>
+       </Grid>
+      </TabItem>
+      <TabItem Header="  Состояние  ">
+       <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="8,14,8,0">
+        <StackPanel><TextBlock Text="Границы обработки" FontWeight="SemiBold"/>
+         <TextBlock x:Name="BoundariesText" Margin="0,8,0,16" TextWrapping="Wrap"/>
+         <TextBlock Text="Вопросы" FontWeight="SemiBold"/><TextBlock x:Name="QuestionsText" Margin="0,8,0,16" TextWrapping="Wrap"/>
+         <TextBlock Text="Факты и договорённости" FontWeight="SemiBold"/><TextBlock x:Name="FactsText" Margin="0,8,0,16" TextWrapping="Wrap"/>
+         <TextBlock Text="Начальный контекст" FontWeight="SemiBold"/>
+         <TextBox x:Name="ContextInput" Margin="0,8,0,16" MinHeight="75" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+         <TextBlock Text="Инструкция, если актуальных вопросов нет" FontWeight="SemiBold"/>
+         <TextBox x:Name="FallbackInput" Margin="0,8,0,8" MinHeight="70" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Text="Кратко подведи итоги разговора и перечисли следующие действия."/>
+         <TextBlock Text="Настройки применяются при следующем событии. Имитатор сохраняет контекст в запросе, но не выполняет произвольные инструкции." FontSize="11" Foreground="{StaticResource Muted}" TextWrapping="Wrap"/>
+        </StackPanel>
+       </ScrollViewer>
+      </TabItem>
+     </TabControl>
+     <StackPanel Grid.Row="1" Margin="0,12,0,0">
+      <Border x:Name="NoticeBorder" Background="#FFF0CE" Padding="8" Margin="0,0,0,8" Visibility="Collapsed"><TextBlock x:Name="NoticeText" TextWrapping="Wrap" Foreground="#855600"/></Border>
+      <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+       <TextBox x:Name="UserInput" ToolTip="Свой вопрос или инструкция" MinHeight="42" MaxHeight="95" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+       <Button Grid.Column="1" Content="Отправить" Click="Send_Click" Margin="8,0,0,0"/>
+      </Grid>
+      <TextBlock Text="Свой вопрос или инструкция · ответы в этом окне создаёт имитатор" Foreground="{StaticResource Muted}" FontSize="10" Margin="0,5,0,0"/>
+     </StackPanel>
+    </Grid>
+   </Border>
+  </Grid>
+  <Border Grid.Row="2" Background="#E8EEF6" CornerRadius="6" Padding="10,8" Margin="0,12,0,0">
+   <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+    <TextBlock x:Name="StatusText" Text="Ожидание старта" TextTrimming="CharacterEllipsis"/>
+    <TextBlock x:Name="ConnectionText" Grid.Column="1" Text="Codex: не подключён · хранение: в памяти" Foreground="{StaticResource Muted}" FontSize="11" Margin="12,0,0,0"/>
+   </Grid>
+  </Border>
+ </Grid>
+</Window>

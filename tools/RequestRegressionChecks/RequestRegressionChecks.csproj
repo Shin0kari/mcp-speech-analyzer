@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><UseAppHost>false</UseAppHost>
+    <EnableDefaultItems>false</EnableDefaultItems><AssemblySearchPaths>{HintPathFromItem};{RawFileName}</AssemblySearchPaths>
+  </PropertyGroup>
+  <ItemGroup><Compile Include="Program.cs" /><Compile Include="Support.cs" />
+    <Compile Include="../TestSupport/TestRunOutput.cs" />
+    <Compile Include="../GracefulStopBinaryChecks/BinaryIdentity.cs" />
+    <Compile Include="../../tests/SpeechAnalyzer.Core.Tests/SessionCoordinatorTests.cs" />
+    <Compile Include="../../tests/SpeechAnalyzer.Core.Tests/ReviewRegressionTests.cs" />
+    <Compile Include="../../tests/SpeechAnalyzer.Core.Tests/OperationJournalV2Tests.cs" />
+    <Compile Include="../../tests/SpeechAnalyzer.Core.Tests/ModelOperationTests.cs" />
+    <Compile Include="../../tests/SpeechAnalyzer.Core.Tests/InterpretationTests.cs" />
+    <Compile Include="../../tests/SpeechAnalyzer.Core.Tests/ApplicationRetrievalTests.cs" />
+    <Reference Include="SpeechAnalyzer.Core"><HintPath>$(StopBinaryDirectory)/SpeechAnalyzer.Core.dll</HintPath><Private>true</Private></Reference>
+  </ItemGroup>
+</Project>
+

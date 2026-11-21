@@ -156,7 +156,7 @@ A read-only connection probe used:
 `codex app-server proxy`
 
 It failed connecting to:
-C:\Users\mitya\.codex\app-server-control\app-server-control.sock
+%USERPROFILE%\.codex\app-server-control\app-server-control.sock
 
 Error:
 “An operation on a socket encountered a dead network” / Windows os error 10050.

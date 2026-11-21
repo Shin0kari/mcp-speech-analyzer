@@ -1,0 +1,196 @@
+<Window x:Class="SpeechAnalyzer.WinUI.MainWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Speech Analyzer · WinUI 3">
+ <Grid x:Name="Root" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+  <Border x:Name="TitleDragRegion" Height="32" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"/>
+  <Grid x:Name="MainLayout" Grid.Row="1" Padding="24" RowSpacing="16">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Grid><StackPanel><TextBlock Text="Speech Analyzer" FontSize="28" FontWeight="SemiBold"/>
+   <TextBlock Text="Разговор, контекст и помощь · WinUI 3" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/></StackPanel>
+   <Border HorizontalAlignment="Right" Background="{ThemeResource SelectionNoticeBackground}" CornerRadius="8" Padding="12,8">
+    <StackPanel><TextBlock x:Name="CaptureBadge" Text="РАСШИФРОВКА: СИМУЛЯЦИЯ" FontWeight="SemiBold" Foreground="{ThemeResource SelectionNoticeForeground}"/>
+     <TextBlock Text="Контекст передаётся Codex только по кнопке" FontSize="11" Foreground="{ThemeResource SelectionNoticeForeground}"/></StackPanel>
+   </Border>
+  </Grid>
+  <Grid Grid.Row="1" ColumnSpacing="18">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="290"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="18" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+    <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Spacing="12">
+     <TextBlock Text="Управление" FontSize="20" FontWeight="SemiBold"/>
+     <Expander Header="Источники звука" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+      <StackPanel Spacing="10">
+     <ComboBox x:Name="CaptureMode" Header="Источник расшифровки" SelectedIndex="0" HorizontalAlignment="Stretch">
+      <ComboBoxItem Content="Симуляция разговора"/>
+      <ComboBoxItem Content="Локальный Whisper · два канала"/>
+     </ComboBox>
+     <ComboBox x:Name="MicrophoneSelector" Header="Микрофон · Вы" DisplayMemberPath="Label" SelectionChanged="AudioSource_Changed" HorizontalAlignment="Stretch"/>
+     <ComboBox x:Name="ProcessSelector" Header="Окно приложения · Собеседник" DisplayMemberPath="Label" SelectionChanged="AudioSource_Changed" HorizontalAlignment="Stretch"/>
+     <ComboBox x:Name="WindowPolicySelector" Header="Восстановление выбора" SelectedIndex="0" SelectionChanged="AudioSource_Changed" HorizontalAlignment="Stretch">
+      <ComboBoxItem Content="Конкретное окно: точный заголовок"/><ComboBoxItem Content="Приложение: заголовок меняется"/>
+     </ComboBox>
+     <TextBlock x:Name="AudioSourceStatusText" TextWrapping="Wrap" FontSize="11"/>
+     <TextBlock x:Name="RequiredSourcesText" TextWrapping="Wrap" FontSize="11" Foreground="{ThemeResource SelectionNoticeForeground}"/>
+     <TextBlock Text="Захватывается дерево процесса. Выбор окна не изолирует вкладку браузера." TextWrapping="Wrap" FontSize="11"/>
+     <Button x:Name="RefreshSourcesButton" Content="Обновить источники" Click="RefreshSources_Click"/>
+      </StackPanel>
+     </Expander>
+     <Expander Header="Запись" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+      <StackPanel Spacing="10">
+       <StackPanel Orientation="Horizontal" Spacing="5">
+        <Button x:Name="StartButton" Content="Старт" Click="Start_Click" Style="{StaticResource AccentButtonStyle}"/>
+        <Button x:Name="PauseButton" Content="Пауза" Click="Pause_Click"/>
+        <Button x:Name="StopButton" Content="Стоп" Click="Stop_Click"/>
+       </StackPanel>
+     <TextBlock x:Name="CaptureDurationText" Text="Активный захват: 00:00:00 · симуляция" TextWrapping="Wrap"/>
+     <TextBlock x:Name="CaptureRecoveryText" TextWrapping="Wrap" FontSize="11" Foreground="{ThemeResource SelectionNoticeForeground}"/>
+     <TextBlock x:Name="YouLevelLabel" Text="Вы · условный уровень" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+     <ProgressBar x:Name="YouLevel" Maximum="1" Value="0"/>
+     <TextBlock x:Name="OtherLevelLabel" Text="Собеседник · условный уровень" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+     <ProgressBar x:Name="OtherLevel" Maximum="1" Value="0"/>
+      </StackPanel>
+     </Expander>
+     <Expander Header="Анализ и ответы" IsExpanded="False" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+      <StackPanel Spacing="10">
+     <ComboBox x:Name="ModeSelector" Header="Режим анализа" SelectedIndex="0" SelectionChanged="Mode_Changed" HorizontalAlignment="Stretch">
+      <ComboBoxItem Content="Ручной · 60 секунд"/><ComboBoxItem Content="Автоматический · 5 секунд"/>
+     </ComboBox>
+     <ComboBox x:Name="ReasoningSelector" Header="Уровень рассуждения Terra" DisplayMemberPath="Label" SelectionChanged="Reasoning_Changed" HorizontalAlignment="Stretch"/>
+     <Button x:Name="LoadReasoningButton" Content="Загрузить уровни Terra" Click="LoadReasoning_Click"/>
+     <TextBlock Text="Реальный захват анализирует расшифровку моделью GPT-6.1 Terra через Codex; симуляция использует имитатор. Старт готовит рабочий чат. Уровень рассуждения фиксируется для каждой операции." TextWrapping="Wrap" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+     <TextBlock x:Name="CountdownText" Text="Таймер не запущен" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+     <Button x:Name="AnswerButton" Content="Ответить" Click="Answer_Click" HorizontalAlignment="Stretch" Style="{StaticResource AccentButtonStyle}"/>
+     <Button x:Name="RetryButton" Content="Повторить после сбоя" Click="Retry_Click" Visibility="Collapsed" HorizontalAlignment="Stretch"/>
+     <Button x:Name="AbandonFailedButton" Content="Отменить неудачный запрос" Click="AbandonFailed_Click" Visibility="Collapsed" HorizontalAlignment="Stretch"/>
+     <TextBlock x:Name="FailedRequestHelp" Text="Повтор может использовать сохранённый ответ. Отмена сохраняет расшифровку и историю запроса; затем можно нажать «Ответить» с уточнённой инструкцией. Новый запрос включит речь до нового клика." Visibility="Collapsed" TextWrapping="Wrap" FontSize="11"/>
+      </StackPanel>
+     </Expander>
+     <Expander Header="Расшифровка и сессии" IsExpanded="False" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+      <StackPanel Spacing="10">
+       <TextBox x:Name="ModelPathInput" Header="Локальная модель Whisper (.bin)" TextWrapping="Wrap" LostFocus="ModelPathInput_LostFocus"/>
+       <CheckBox x:Name="VadToggle" Content="Экспериментальный локальный VAD" IsChecked="False"/>
+       <CheckBox x:Name="RetainTestAudio" Content="Сохранять аудио тестовой сессии: Вы / Собеседник" IsChecked="False"/>
+       <TextBox x:Name="VadPathInput" Header="Локальная модель Silero VAD (.bin)" TextWrapping="Wrap"/>
+       <TextBlock Text="VAD пропускает блок целиком, если не обнаружена речь. Качество на реальной тихой речи ещё проверяется. По умолчанию выключен." TextWrapping="Wrap" FontSize="11"/>
+       <TextBox x:Name="SessionPathInput" Header="Каталог сохранённой сессии (необязательно)" TextWrapping="Wrap"/>
+       <ComboBox x:Name="SavedSessionsSelector" Header="Сохранённые разговоры" DisplayMemberPath="Label" HorizontalAlignment="Stretch" SelectionChanged="SavedSession_Changed"/>
+       <TextBlock Text="Настройки хранения разговоров" FontWeight="SemiBold"/>
+       <TextBlock x:Name="ConversationRootText" TextWrapping="Wrap" FontSize="11"/>
+       <Button Click="ChooseConversationRoot_Click" HorizontalAlignment="Stretch"><TextBlock Text="Выбрать папку новых разговоров" TextWrapping="Wrap"/></Button>
+       <Button Content="Использовать Documents" Click="DefaultConversationRoot_Click"/>
+       <Button Content="Обновить список разговоров" Click="RefreshSessions_Click"/>
+       <Button x:Name="RestoreSessionButton" Content="Открыть сохранённую сессию" Click="RestoreSession_Click"/>
+       <Button x:Name="NewSessionButton" Content="Новый разговор" Click="NewSession_Click"/>
+       <Button x:Name="OpenFolderButton" Content="Открыть папку разговора" Click="OpenFolder_Click"/>
+       <Button x:Name="ExportTranscriptButton" Click="ExportTranscript_Click" HorizontalAlignment="Stretch" ToolTipService.ToolTip="conversation.txt — снимок окончательной расшифровки. После продолжения разговора повторите экспорт."><TextBlock Text="Экспорт полного текста (UTF-8)" TextWrapping="Wrap"/></Button>
+       <TextBlock x:Name="StorageText" Text="Симуляция хранится в памяти. Для тестовой записи включите сохранение аудио перед Стартом." TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="11"/>
+      </StackPanel>
+     </Expander>
+     <ComboBox x:Name="ThemeSelector" Header="Тема оформления" SelectedIndex="0" SelectionChanged="Theme_Changed" HorizontalAlignment="Stretch">
+      <ComboBoxItem Content="Как в системе"/><ComboBoxItem Content="Тёмная"/><ComboBoxItem Content="Светлая"/>
+     </ComboBox>
+     <Expander Header="Имитатор" IsExpanded="False" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+      <StackPanel Spacing="10">
+     <CheckBox x:Name="DemoSpeech" Content="Демонстрационный разговор" IsChecked="True"/>
+     <Button x:Name="ShellMessageButton" Visibility="Collapsed" Click="ShellMessage_Click"><TextBlock Text="Добавить синтетическое сообщение" TextWrapping="Wrap"/></Button>
+     <ComboBox x:Name="DelaySelector" Header="Задержка модели" SelectedIndex="0" HorizontalAlignment="Stretch">
+      <ComboBoxItem Content="2 секунды"/><ComboBoxItem Content="8 секунд"/><ComboBoxItem Content="15 секунд"/>
+     </ComboBox>
+     <CheckBox x:Name="FailNext" Content="Ошибка следующего вызова" Checked="FailNext_Changed" Unchecked="FailNext_Changed"/>
+      </StackPanel>
+     </Expander>
+    </StackPanel></ScrollViewer>
+   </Border>
+   <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="14" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+    <Grid RowSpacing="12"><Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+     <TabView IsAddTabButtonVisible="False" TabWidthMode="SizeToContent">
+      <TabViewItem Header="Ответы" IsClosable="False">
+       <Grid RowSpacing="8"><Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <ScrollViewer x:Name="ChatScroll" VerticalScrollBarVisibility="Auto" ViewChanged="Chat_ViewChanged">
+         <StackPanel Spacing="12" Padding="4,12,10,0">
+          <InfoBar x:Name="ModeNotice" IsOpen="True" IsClosable="False" Severity="Informational" Title="Сначала выберите источник и нажмите Старт"
+           Message="Демонстрационные реплики появляются раз в 6 секунд. Ответы анализа пока создаёт имитатор. Контекст на отдельной вкладке можно передать реальному Codex."/>
+          <ItemsControl ItemsSource="{Binding Chat}"><ItemsControl.ItemTemplate><DataTemplate>
+           <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="8" Padding="16" Margin="0,0,0,12">
+            <StackPanel Spacing="8"><TextBlock Text="{Binding Header}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+             <TextBlock Text="{Binding Text}" TextWrapping="Wrap" IsTextSelectionEnabled="True"/>
+            </StackPanel>
+           </Border>
+          </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+         </StackPanel>
+        </ScrollViewer>
+        <Button x:Name="LatestButton" Content="К последнему сообщению ↓" Grid.Row="1" HorizontalAlignment="Right" Visibility="Collapsed" Click="Latest_Click"/>
+       </Grid>
+      </TabViewItem>
+      <TabViewItem Header="Расшифровка" IsClosable="False">
+       <Grid RowSpacing="10" Padding="4,12,4,0"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <StackPanel Spacing="6">
+         <TextBox x:Name="TranscriptSearchInput" Header="Поиск исходного текста" PlaceholderText="Точная часть фразы или ID сегмента"/>
+         <StackPanel Orientation="Horizontal" Spacing="8"><Button Content="Найти" Click="SearchTranscript_Click"/><Button Content="Вся расшифровка" Click="ClearTranscriptSearch_Click"/><Button x:Name="MoreTranscriptButton" Content="Следующая страница" Click="MoreTranscript_Click" IsEnabled="False"/></StackPanel>
+         <TextBlock x:Name="TranscriptSearchStatus" TextWrapping="Wrap"/>
+        </StackPanel>
+        <ListView Grid.Row="1" ItemsSource="{Binding Transcript}" SelectionMode="None"><ListView.ItemTemplate><DataTemplate>
+         <StackPanel Spacing="5" Padding="0,8"><TextBlock Text="{Binding Header}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+          <TextBlock Text="{Binding Text}" TextWrapping="Wrap"/>
+         </StackPanel>
+        </DataTemplate></ListView.ItemTemplate></ListView>
+        <StackPanel Grid.Row="2" Spacing="8"><TextBox x:Name="SpeechInput" Header="Тестовая реплика · финализация через 1,5 с"/>
+         <StackPanel Orientation="Horizontal" Spacing="6">
+          <ComboBox x:Name="ChannelSelector" SelectedIndex="1"><ComboBoxItem Content="Вы"/><ComboBoxItem Content="Собеседник"/></ComboBox>
+          <ComboBox x:Name="MeaningSelector" SelectedIndex="0"><ComboBoxItem Content="Факт"/><ComboBoxItem Content="Новый вопрос"/></ComboBox>
+          <Button x:Name="InjectButton" Content="Добавить" Click="Inject_Click"/>
+         </StackPanel>
+        </StackPanel>
+       </Grid>
+      </TabViewItem>
+      <TabViewItem Header="Контекст и файлы" IsClosable="False">
+       <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel x:Name="BindingContextPanel" Spacing="12" Padding="8,14,12,0">
+        <TextBox x:Name="ContextInput" Header="Начальный контекст и инструкции" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="90" TextChanged="Context_Changed"/>
+        <StackPanel Orientation="Horizontal" Spacing="8"><Button Content="Прикрепить файлы" Click="AttachFiles_Click"/>
+         <Button Content="Выбрать проект" Click="AttachProject_Click"/><Button Content="Очистить" Click="ClearContext_Click"/></StackPanel>
+        <TextBlock x:Name="AttachmentsText" Text="Вложения не выбраны" TextWrapping="Wrap" FontSize="12"/>
+        <TextBlock Text="Текстовые файлы и исходники: до 1 МиБ на файл, 200 файлов и 8 МиБ суммарно. При выборе проекта AGENTS.md включается первым; служебные папки, .env и файлы секретов исключаются. Весь состав виден ниже." TextWrapping="Wrap" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+        <ListView ItemsSource="{Binding ContextFiles}" SelectionMode="None" MaxHeight="170"><ListView.ItemTemplate><DataTemplate>
+         <StackPanel Orientation="Horizontal" Spacing="12"><TextBlock Text="{Binding Name}"/><TextBlock Text="{Binding Size}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/></StackPanel>
+        </DataTemplate></ListView.ItemTemplate></ListView>
+        <Button x:Name="TransferButton" Content="Передать контекст Codex" Style="{StaticResource AccentButtonStyle}" Click="TransferContext_Click"/>
+        <TextBlock x:Name="ContextStatusText" Text="Старт подготавливает отдельный чат GPT-6.1 Terra. Эта кнопка передаёт ему контекст через Codex CLI и использует лимиты Codex." TextWrapping="Wrap" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+        <StackPanel x:Name="BindingPanel" Spacing="12">
+        <TextBlock x:Name="CodexThreadText" Text="Рабочий чат Terra ещё не создан" IsTextSelectionEnabled="True" TextWrapping="Wrap" FontSize="12"/>
+        <TextBox x:Name="ChatBindingIdInput" Header="Известный ID чата для сверки" TextChanged="ChatBindingId_Changed"/>
+        <Button x:Name="InspectChatBindingButton" Content="Проверить соответствие чата" Click="InspectChatBinding_Click"/>
+        <TextBlock x:Name="ChatBindingEvidenceText" TextWrapping="Wrap" IsTextSelectionEnabled="True"/>
+        <Button x:Name="AcceptChatBindingButton" Content="Принять проверенную привязку" Click="AcceptChatBinding_Click" IsEnabled="False"/>
+        <Button x:Name="ReplaceChatBindingButton" Content="Разрешить новый чат вместо неопределённого" Click="ReplaceChatBinding_Click"/>
+        </StackPanel>
+        <TextBox x:Name="FallbackInput" Header="Инструкция, если актуальных вопросов нет" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="70" TextChanged="Context_Changed" Text="Кратко подведи итоги разговора и перечисли следующие действия."/>
+       </StackPanel></ScrollViewer>
+      </TabViewItem>
+      <TabViewItem Header="Состояние" IsClosable="False">
+       <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Spacing="12" Padding="8,16">
+        <TextBlock Text="Границы обработки" FontWeight="SemiBold"/><TextBlock x:Name="BoundariesText" TextWrapping="Wrap"/>
+        <TextBlock Text="Вопросы" FontWeight="SemiBold"/><TextBlock x:Name="QuestionsText" TextWrapping="Wrap"/>
+        <TextBlock Text="Факты и договорённости" FontWeight="SemiBold"/><TextBlock x:Name="FactsText" TextWrapping="Wrap"/>
+        <TextBlock Text="Rust MCP · локальное управление" FontWeight="SemiBold"/><TextBlock x:Name="McpText" TextWrapping="Wrap" FontSize="12"/>
+        <Button Content="Сверить результаты и продолжить обработку" Click="ReconcileModel_Click"/>
+        <TextBlock Text="После сверки поиск оригиналов может отправить следующий запрос модели. Уже принятый шаг повторно не отправляется." TextWrapping="Wrap" FontSize="12"/>
+       </StackPanel></ScrollViewer>
+      </TabViewItem>
+     </TabView>
+     <StackPanel x:Name="InputFooter" Grid.Row="1" Spacing="8">
+      <InfoBar x:Name="Notice" IsOpen="False" IsClosable="True" Severity="Warning"/>
+      <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+       <TextBox x:Name="UserInput" PlaceholderText="Свой вопрос или инструкция для анализа" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="42" MaxHeight="90"/>
+       <Button Grid.Column="1" Content="Отправить" Click="Send_Click" VerticalAlignment="Stretch"/>
+      </Grid>
+     </StackPanel>
+    </Grid>
+   </Border>
+  </Grid>
+  <Grid Grid.Row="2"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+   <TextBlock x:Name="StatusText" Text="Ожидание старта" TextTrimming="CharacterEllipsis"/>
+   <TextBlock x:Name="ConnectionText" Grid.Column="1" Text="Анализ: имитатор · хранение: в памяти" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12"/>
+  </Grid>
+  </Grid>
+ </Grid>
+</Window>

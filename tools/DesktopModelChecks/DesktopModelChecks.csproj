@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>SpeechAnalyzer.Core.Tests</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseAppHost>false</UseAppHost>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="SpeechAnalyzer.Core" HintPath="$(CandidateDirectory)/SpeechAnalyzer.Core.dll" />
+    <Compile Include="../TestSupport/TestRunOutput.cs" />
+  </ItemGroup>
+  <Target Name="RequireExactCandidate" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(CandidateDirectory)/SpeechAnalyzer.Core.dll')" Text="Supply the isolated candidate binary directory." />
+  </Target>
+</Project>

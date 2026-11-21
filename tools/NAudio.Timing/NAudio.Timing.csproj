@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Отдельная диагностическая сборка точного source pin. Обычный проект использует NuGet3.3.0. -->
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>NAudio.Wasapi</AssemblyName><Version>3.3.0</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks><Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <PinRoot>$(MSBuildThisFileDirectory)../../artifacts/capture-measurement-20261103/upstream/NAudio-4f8889e2bd34c3978a25652c6c172fa1502ccba3</PinRoot>
+    <PatchRoot>$(MSBuildThisFileDirectory)../../artifacts/capture-measurement-20261103/patched</PatchRoot>
+    <SignAssembly>true</SignAssembly><AssemblyOriginatorKeyFile>$(PinRoot)/NAudioStrongNameKey.snk</AssemblyOriginatorKeyFile>
+    <!-- Локальная диагностика ссылается на unsigned Core; published NuGet не создаётся. -->
+    <NoWarn>$(NoWarn);CS8002</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <KnownFrameworkReference Update="@(KnownFrameworkReference)"><TargetingPackVersion Condition="'%(TargetFramework)' == 'net9.0'">9.0.18</TargetingPackVersion></KnownFrameworkReference>
+    <PackageReference Include="NAudio.Core" Version="3.3.0" />
+    <ProjectReference Include="../../src/SpeechAnalyzer.Core/SpeechAnalyzer.Core.csproj" />
+    <Compile Include="$(PinRoot)/src/NAudio.Wasapi/**/*.cs" Exclude="$(PinRoot)/src/NAudio.Wasapi/obj/**;$(PinRoot)/src/NAudio.Wasapi/WasapiRecorder.cs;$(PinRoot)/src/NAudio.Wasapi/CoreAudioApi/AudioCaptureClient.cs" />
+    <Compile Include="$(PatchRoot)/*.cs" />
+    <AssemblyAttribute Include="System.Runtime.Versioning.SupportedOSPlatformAttribute"><_Parameter1>windows</_Parameter1></AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup><AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute"><_Parameter1>NAudio.Windows.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010085bcbc880396e84657fb176fe88819d4ec1ab822087fe020022075848f6be36d27548de50827e60cd106915df2033380ba15ae280131a6bdc99a62e583058e8761f117219ab9c120f1a3c1c4997810c103ee4eb1730ea477eee2bd5d3d366f87dbdc495b819616f9073d0ea119ee0109d1454f1eb010558426b4e75f8204f4aa</_Parameter1></AssemblyAttribute></ItemGroup>
+  <Target Name="CheckPinnedSources" BeforeTargets="BeforeBuild"><Error Condition="!Exists('$(PatchRoot)/WasapiRecorder.cs')" Text="Сначала выполните scripts/prepare-naudio-timing.ps1 с локальным архивом точного pin." /></Target>
+</Project>

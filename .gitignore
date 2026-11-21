@@ -23,3 +23,5 @@ secrets/
 *.pcm
 *.pfx
 *.pem
+target/
+.local-backups/
